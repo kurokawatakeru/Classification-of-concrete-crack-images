@@ -1,0 +1,8 @@
+              precision    recall  f1-score   support
+
+    No Crack       0.95      0.98      0.97      4382
+       Crack       0.78      0.53      0.63       485
+
+    accuracy                           0.94      4867
+   macro avg       0.87      0.76      0.80      4867
+weighted avg       0.93      0.94      0.93      4867
