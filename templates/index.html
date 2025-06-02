@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>コンクリートひび割れ検出システム</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
+        #preview {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .probability-bar {
+            width: 100%;
+            background-color: #f0f0f0;
+            margin: 5px 0;
+            border-radius: 3px;
+            height: 20px;
+            position: relative;
+        }
+        .probability-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease-in-out;
+            position: relative;
+        }
+        .crack {
+            background-color: #ff4444;
+        }
+        .no-crack {
+            background-color: #4CAF50;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .error {
+            color: #ff4444;
+            margin-top: 10px;
+            display: none;
+        }
+        .surface-type {
+            font-weight: bold;
+            color: #333;
+        }
+        .result-label {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>コンクリートひび割れ検出システム</h1>
+        <p>画像をアップロードして、コンクリート表面のひび割れを検出します。</p>
+        
+        <form id="upload-form">
+            <div class="form-group">
+                <label for="surface-type">表面タイプ:</label>
+                <select id="surface-type" name="surface_type" required>
+                    {% for code, name in surface_types %}
+                    <option value="{{ code }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="file-input">画像をアップロード:</label>
+                <input type="file" id="file-input" name="file" accept="image/*" required>
+            </div>
+            
+            <button type="submit" id="submit-btn">分析開始</button>
+        </form>
+
+        <img id="preview" alt="プレビュー画像">
+        
+        <div class="loading">
+            <p>画像を分析中...</p>
+        </div>
+        
+        <div class="error" id="error-message"></div>
+
+        <div id="result" class="result">
+            <h2>分析結果</h2>
+            <p>表面タイプ: <span id="result-surface-type" class="surface-type"></span></p>
+            <p class="result-label">判定結果: <span id="predicted-class"></span></p>
+            
+            <h3>確信度</h3>
+            <p>ひび割れなし:</p>
+            <div class="probability-bar">
+                <div id="no-crack-prob" class="probability-fill no-crack">
+                    <span class="probability-label"></span>
+                </div>
+            </div>
+            <p>ひび割れあり:</p>
+            <div class="probability-bar">
+                <div id="crack-prob" class="probability-fill crack">
+                    <span class="probability-label"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const preview = document.getElementById('preview');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMessage = document.getElementById('error-message');
+        
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+                submitBtn.disabled = false;
+            } else {
+                preview.style.display = 'none';
+                submitBtn.disabled = true;
+            }
+        });
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('file-input');
+            const surfaceType = document.getElementById('surface-type');
+            
+            if (!fileInput.files[0]) {
+                showError('画像ファイルを選択してください。');
+                return;
+            }
+            
+            formData.append('file', fileInput.files[0]);
+            formData.append('surface_type', surfaceType.value);
+            
+            // UI更新
+            submitBtn.disabled = true;
+            document.querySelector('.loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    showError(result.error);
+                    return;
+                }
+                
+                // 結果の表示
+                document.getElementById('result-surface-type').textContent = result.surface_type;
+                document.getElementById('predicted-class').textContent = 
+                    result.predicted_class === 'Crack' ? 'ひび割れあり' : 'ひび割れなし';
+                
+                // 確率バーの更新
+                updateProbabilityBar('no-crack-prob', result.probabilities['No Crack']);
+                updateProbabilityBar('crack-prob', result.probabilities['Crack']);
+                
+                document.getElementById('result').style.display = 'block';
+            } catch (error) {
+                showError('画像の分析中にエラーが発生しました。');
+                console.error('Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                document.querySelector('.loading').style.display = 'none';
+            }
+        });
+
+        function updateProbabilityBar(elementId, probability) {
+            const element = document.getElementById(elementId);
+            const label = element.querySelector('.probability-label');
+            element.style.width = `${probability}%`;
+            label.textContent = `${probability}%`;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
