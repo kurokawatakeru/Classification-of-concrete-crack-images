@@ -2,110 +2,329 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>コンクリートひび割れ検出システム</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            background-color: #f5f5f5;
         }
         .container {
             background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1rem;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
+        
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.95rem;
         }
-        select, input[type="file"] {
+        
+        select {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23718096" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3e%3cpolyline points="6 9 12 15 18 9"%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25em;
+            padding-right: 2.5rem;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 0.75rem 1rem;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #3498db;
+            font-weight: 500;
+        }
+        
+        .file-input-label:hover {
+            background-color: #f0f8ff;
+            border-color: #2980b9;
+        }
+        
+        .file-input-label.has-file {
+            background-color: #e8f4f8;
+            border-style: solid;
         }
         button {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
-            padding: 10px 20px;
+            padding: 0.875rem 2rem;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
-        button:hover {
-            background-color: #45a049;
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
         button:disabled {
-            background-color: #cccccc;
+            background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
             cursor: not-allowed;
+            box-shadow: none;
         }
         .result {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 15px;
             display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .result-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: #34495e;
+            margin-right: 0.5rem;
+            min-width: 120px;
+        }
+        
+        .result-value {
+            color: #2c3e50;
+            font-weight: 500;
         }
         #preview {
             max-width: 100%;
             height: auto;
-            margin: 20px 0;
-            border-radius: 5px;
+            margin: 1.5rem 0;
+            border-radius: 15px;
             display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
+        .probability-container {
+            margin-top: 1.5rem;
+        }
+        
+        .probability-item {
+            margin-bottom: 1rem;
+        }
+        
+        .probability-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
         .probability-bar {
             width: 100%;
-            background-color: #f0f0f0;
-            margin: 5px 0;
-            border-radius: 3px;
-            height: 20px;
+            background-color: #ecf0f1;
+            height: 25px;
+            border-radius: 12.5px;
+            overflow: hidden;
             position: relative;
         }
+        
         .probability-fill {
             height: 100%;
-            border-radius: 3px;
-            transition: width 0.5s ease-in-out;
+            border-radius: 12.5px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
         }
+        
         .crack {
-            background-color: #ff4444;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
+        
         .no-crack {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
         }
         .loading {
             display: none;
             text-align: center;
-            margin: 20px 0;
+            margin: 2rem 0;
         }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
         .error {
-            color: #ff4444;
-            margin-top: 10px;
+            background-color: #fee;
+            color: #c0392b;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
             display: none;
+            font-weight: 500;
+            border: 1px solid #f5c6c6;
         }
-        .surface-type {
-            font-weight: bold;
-            color: #333;
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
         }
-        .result-label {
-            font-size: 1.2em;
-            margin: 10px 0;
+        
+        .badge-crack {
+            background-color: #fee;
+            color: #c0392b;
+        }
+        
+        .badge-no-crack {
+            background-color: #e8f8f5;
+            color: #27ae60;
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>コンクリートひび割れ検出システム</h1>
-        <p>画像をアップロードして、コンクリート表面のひび割れを検出します。</p>
+        <p class="subtitle">AIを活用してコンクリート表面のひび割れを自動検出</p>
         
         <form id="upload-form">
             <div class="form-group">
@@ -119,7 +338,12 @@
             
             <div class="form-group">
                 <label for="file-input">画像をアップロード:</label>
-                <input type="file" id="file-input" name="file" accept="image/*" required>
+                <div class="file-input-wrapper">
+                    <input type="file" id="file-input" name="file" accept="image/*" required>
+                    <label for="file-input" class="file-input-label" id="file-label">
+                        クリックまたはドラッグ&ドロップで画像を選択
+                    </label>
+                </div>
             </div>
             
             <button type="submit" id="submit-btn">分析開始</button>
@@ -128,27 +352,49 @@
         <img id="preview" alt="プレビュー画像">
         
         <div class="loading">
-            <p>画像を分析中...</p>
+            <div class="loading-spinner"></div>
+            <p class="loading-text">画像を分析中...</p>
         </div>
         
         <div class="error" id="error-message"></div>
 
         <div id="result" class="result">
             <h2>分析結果</h2>
-            <p>表面タイプ: <span id="result-surface-type" class="surface-type"></span></p>
-            <p class="result-label">判定結果: <span id="predicted-class"></span></p>
             
-            <h3>確信度</h3>
-            <p>ひび割れなし:</p>
-            <div class="probability-bar">
-                <div id="no-crack-prob" class="probability-fill no-crack">
-                    <span class="probability-label"></span>
-                </div>
+            <div class="result-item">
+                <span class="result-label">表面タイプ:</span>
+                <span id="result-surface-type" class="result-value"></span>
             </div>
-            <p>ひび割れあり:</p>
-            <div class="probability-bar">
-                <div id="crack-prob" class="probability-fill crack">
-                    <span class="probability-label"></span>
+            
+            <div class="result-item">
+                <span class="result-label">判定結果:</span>
+                <span class="result-value">
+                    <span id="predicted-class"></span>
+                    <span id="result-badge" class="badge"></span>
+                </span>
+            </div>
+            
+            <div class="probability-container">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">確信度</h3>
+                
+                <div class="probability-item">
+                    <div class="probability-label">
+                        <span>ひび割れなし</span>
+                        <span id="no-crack-percentage"></span>
+                    </div>
+                    <div class="probability-bar">
+                        <div id="no-crack-prob" class="probability-fill no-crack"></div>
+                    </div>
+                </div>
+                
+                <div class="probability-item">
+                    <div class="probability-label">
+                        <span>ひび割れあり</span>
+                        <span id="crack-percentage"></span>
+                    </div>
+                    <div class="probability-bar">
+                        <div id="crack-prob" class="probability-fill crack"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -157,6 +403,7 @@
     <script>
         const form = document.getElementById('upload-form');
         const fileInput = document.getElementById('file-input');
+        const fileLabel = document.getElementById('file-label');
         const preview = document.getElementById('preview');
         const submitBtn = document.getElementById('submit-btn');
         const errorMessage = document.getElementById('error-message');
@@ -170,12 +417,59 @@
                     preview.style.display = 'block';
                 }
                 reader.readAsDataURL(file);
+                fileLabel.textContent = file.name;
+                fileLabel.classList.add('has-file');
                 submitBtn.disabled = false;
             } else {
                 preview.style.display = 'none';
+                fileLabel.textContent = 'クリックまたはドラッグ&ドロップで画像を選択';
+                fileLabel.classList.remove('has-file');
                 submitBtn.disabled = true;
             }
         });
+        
+        // ドラッグ&ドロップの実装
+        const fileInputWrapper = document.querySelector('.file-input-wrapper');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileInputWrapper.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputWrapper.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputWrapper.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            fileLabel.style.backgroundColor = '#f0f8ff';
+            fileLabel.style.borderColor = '#2980b9';
+        }
+        
+        function unhighlight(e) {
+            fileLabel.style.backgroundColor = '';
+            fileLabel.style.borderColor = '';
+        }
+        
+        fileInputWrapper.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        }
 
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -213,12 +507,25 @@
                 
                 // 結果の表示
                 document.getElementById('result-surface-type').textContent = result.surface_type;
-                document.getElementById('predicted-class').textContent = 
-                    result.predicted_class === 'Crack' ? 'ひび割れあり' : 'ひび割れなし';
+                const isCrack = result.predicted_class === 'Crack';
+                const resultText = isCrack ? 'ひび割れあり' : 'ひび割れなし';
+                document.getElementById('predicted-class').textContent = resultText;
+                
+                // バッジの表示
+                const badge = document.getElementById('result-badge');
+                badge.textContent = isCrack ? '警告' : '正常';
+                badge.className = isCrack ? 'badge badge-crack' : 'badge badge-no-crack';
+                
+                // 確率の表示
+                const noCrackProb = result.probabilities['No Crack'];
+                const crackProb = result.probabilities['Crack'];
+                
+                document.getElementById('no-crack-percentage').textContent = noCrackProb + '%';
+                document.getElementById('crack-percentage').textContent = crackProb + '%';
                 
                 // 確率バーの更新
-                updateProbabilityBar('no-crack-prob', result.probabilities['No Crack']);
-                updateProbabilityBar('crack-prob', result.probabilities['Crack']);
+                updateProbabilityBar('no-crack-prob', noCrackProb);
+                updateProbabilityBar('crack-prob', crackProb);
                 
                 document.getElementById('result').style.display = 'block';
             } catch (error) {
@@ -232,9 +539,14 @@
 
         function updateProbabilityBar(elementId, probability) {
             const element = document.getElementById(elementId);
-            const label = element.querySelector('.probability-label');
             element.style.width = `${probability}%`;
-            label.textContent = `${probability}%`;
+            
+            // バーの幅が狭い場合はパーセンテージを表示しない
+            if (parseFloat(probability) > 15) {
+                element.textContent = `${probability}%`;
+            } else {
+                element.textContent = '';
+            }
         }
 
         function showError(message) {
