@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Vercel
+.vercel/
+vercel.json
+app_vercel.py
+api/
+
+# Railway
+railway.json
+
+# Docs
+README.md
+*.md
+
+# Test files
+test/
+tests/
+
+# Build files
+build/
+dist/

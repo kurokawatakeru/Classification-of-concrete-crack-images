@@ -17,7 +17,7 @@ AIを活用してコンクリート表面のひび割れを自動検出するWeb
 - **バックエンド**: FastAPI
 - **深層学習**: PyTorch, ResNet50
 - **フロントエンド**: HTML, CSS, JavaScript
-- **デプロイ**: Vercel
+- **デプロイ**: Google Cloud Run
 
 ## 📊 モデル性能
 
@@ -63,7 +63,40 @@ pip install -r requirements.txt
 python app.py
 ```
 
-アプリケーションは `http://localhost:8000` で起動します。
+アプリケーションは `http://localhost:8080` で起動します。
+
+## ☁️ Google Cloud Runへのデプロイ
+
+### 前提条件
+1. Google Cloud プロジェクトの作成
+2. GitHub リポジトリへのアクセス
+
+### セットアップ手順
+
+1. **Google Cloud でサービスアカウントを作成**
+   ```bash
+   # サービスアカウントを作成
+   gcloud iam service-accounts create github-actions --display-name "GitHub Actions"
+   
+   # 必要な権限を付与
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+     --role="roles/run.admin"
+   
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+     --role="roles/storage.admin"
+   
+   # サービスアカウントキーを作成
+   gcloud iam service-accounts keys create key.json \
+     --iam-account=github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com
+   ```
+
+2. **GitHub Secretsを設定**
+   - `GCP_PROJECT_ID`: Google CloudプロジェクトID
+   - `GCP_SA_KEY`: サービスアカウントキー（key.jsonの内容）
+
+3. **mainブランチにpushすると自動デプロイ**
 
 ## 📝 学習データ
 
